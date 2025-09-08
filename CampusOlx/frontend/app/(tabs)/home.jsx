@@ -12,7 +12,8 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
 import colors from "../../assets/constants/colors";
-
+import { useAuth } from "../context/AuthContext";
+import { useRouter } from "expo-router";
 const { width } = Dimensions.get("window");
 
 const Home = () => {
@@ -26,7 +27,8 @@ const Home = () => {
   if (!fontsLoaded) {
     return null;
   }
-
+  const { user } = useAuth();
+  const router = useRouter();
   const products = [
     {
       id: "1",
@@ -90,9 +92,15 @@ const Home = () => {
         "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQBqj9QkR8RKxjrmaanFgY_AguYP7k8XFCz1g&s",
     },
   ];
-
+  const handleSell = () => {
+    router.navigate("screens/SellForm");
+  };
   const renderProductCard = ({ item }) => (
-    <TouchableOpacity style={styles.productCard} activeOpacity={0.8}>
+    <TouchableOpacity
+      style={styles.productCard}
+      activeOpacity={0.8}
+      onPress={() => alert("Nothing will happen as app is under Progress!")}
+    >
       <Image source={{ uri: item.image }} style={styles.productImage} />
       {/* Price Tag */}
       <View style={styles.priceContainer}>
@@ -118,7 +126,7 @@ const Home = () => {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.greetingText}>
-          Hi Nishant <Text style={styles.handEmoji}>👋</Text>
+          Hi {user?.name} <Text style={styles.handEmoji}>👋</Text>
         </Text>
         <TouchableOpacity>
           <Ionicons name="search-outline" size={28} color="#000" />
@@ -133,7 +141,7 @@ const Home = () => {
             Sell anything within your community at best price!
           </Text>
         </View>
-        <TouchableOpacity style={styles.sellButton}>
+        <TouchableOpacity style={styles.sellButton} onPress={handleSell}>
           <Ionicons name="camera-outline" size={20} color="white" />
           <Text style={styles.sellButtonText}> Sell</Text>
         </TouchableOpacity>
@@ -162,7 +170,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingTop: 40,
   },
   header: {

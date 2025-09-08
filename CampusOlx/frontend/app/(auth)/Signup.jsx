@@ -10,28 +10,37 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
-import colors from "../assets/constants/colors";
+import colors from "../../assets/constants/colors";
 import { useRouter } from "expo-router";
 
-const Login = ({ navigation }) => {
+const Signup = ({ navigation }) => {
+  const router = useRouter();
+
   const [fontsLoaded] = useFonts({
-    pop: require("../assets/fonts/Poppins-Regular.ttf"),
-    popm: require("../assets/fonts/Poppins-Medium.ttf"),
-    popb: require("../assets/fonts/Poppins-Bold.ttf"),
-    popsb: require("../assets/fonts/Poppins-SemiBold.ttf"),
+    pop: require("../../assets/fonts/Poppins-Regular.ttf"),
+    popm: require("../../assets/fonts/Poppins-Medium.ttf"),
+    popb: require("../../assets/fonts/Poppins-Bold.ttf"),
+    popsb: require("../../assets/fonts/Poppins-SemiBold.ttf"),
   });
 
   const [showPassword, setShowPassword] = useState(false);
 
   if (!fontsLoaded) return null;
-  const router = useRouter();
-  function handleLogin() {
-    router.navigate("(tabs)/home");
-  }
+
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.heading}>Welcome Back</Text>
-      <Text style={styles.subheading}>Login to your account</Text>
+      <Text style={styles.heading}>Create Account</Text>
+      <Text style={styles.subheading}>Sign up to get started!</Text>
+
+      {/* Full Name */}
+      <View style={styles.inputContainer}>
+        <Ionicons name="person-outline" size={20} color="#999" />
+        <TextInput
+          placeholder="Full Name"
+          style={styles.input}
+          placeholderTextColor="#999"
+        />
+      </View>
 
       {/* Email */}
       <View style={styles.inputContainer}>
@@ -65,17 +74,28 @@ const Login = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Login Button */}
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Login</Text>
+      {/* Confirm Password */}
+      <View style={styles.inputContainer}>
+        <Ionicons name="lock-closed-outline" size={20} color="#999" />
+        <TextInput
+          placeholder="Confirm Password"
+          style={styles.input}
+          secureTextEntry={true}
+          placeholderTextColor="#999"
+        />
+      </View>
+
+      {/* Signup Button */}
+      <TouchableOpacity style={styles.button}>
+        <Text style={styles.buttonText}>Sign Up</Text>
       </TouchableOpacity>
 
-      {/* Signup Link */}
+      {/* Login Link */}
       <View style={styles.bottomText}>
-        <Text style={{ fontFamily: "pop" }}>Don't have an account? </Text>
-        <TouchableOpacity onPress={() => router.back("/Signup")}>
+        <Text style={{ fontFamily: "pop" }}>Already have an account? </Text>
+        <TouchableOpacity onPress={() => router.push("/Login")}>
           <Text style={{ fontFamily: "popm", color: colors.primary }}>
-            Sign Up
+            Login
           </Text>
         </TouchableOpacity>
       </View>
@@ -122,4 +142,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Login;
+export default Signup;

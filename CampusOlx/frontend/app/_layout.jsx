@@ -1,14 +1,30 @@
 import { Stack } from "expo-router";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import { View, ActivityIndicator } from "react-native";
 
-export default function Layout() {
+function RootNavigation() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    // Show splash while checking AsyncStorage
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
   return (
-    <Stack>
-      <Stack.Screen name="Index" options={{ headerShown: false }} />
-
-      <Stack.Screen name="Signup" options={{ headerShown: false }} />
-      <Stack.Screen name="Login" options={{ headerShown: false }} />
-
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+    <Stack screenOptions={{ headerShown: false }}>
+      {user ? <Stack.Screen name="(tabs)" /> : <Stack.Screen name="(auth)" />}
     </Stack>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <AuthProvider>
+      <RootNavigation />
+    </AuthProvider>
   );
 }

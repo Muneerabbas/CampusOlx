@@ -11,7 +11,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
 import colors from "../../assets/constants/colors";
-
+import { useAuth } from "../context/AuthContext";
 const Profile = () => {
   const [fontsLoaded] = useFonts({
     pop: require("../../assets/fonts/Poppins-Regular.ttf"),
@@ -45,10 +45,12 @@ const Profile = () => {
       id: "4",
       title: "Logout",
       icon: "log-out-outline",
-      onPress: () => alert("Logout clicked"),
+      onPress: () => {
+        logout();
+      },
     },
   ];
-
+  const { logout } = useAuth();
   return (
     <SafeAreaView style={styles.container}>
       {/* Header / Profile Info */}
@@ -93,7 +95,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingTop: 40,
     alignItems: "center",
     justifyContent: "flex-start",
