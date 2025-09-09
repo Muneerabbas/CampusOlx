@@ -7,11 +7,16 @@ import {
   StyleSheet,
   SafeAreaView,
   ScrollView,
+  ActivityIndicator,
   Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
+import axios from "axios";
+import { API_URL } from "../../config";
 import colors from "../../assets/constants/colors";
+import * as ImagePicker from "expo-image-picker";
+import { useAuth } from "../context/AuthContext";
 
 export default function SellForm() {
   const [fontsLoaded] = useFonts({
@@ -25,8 +30,61 @@ export default function SellForm() {
   const [desc, setDesc] = useState("");
   const [price, setPrice] = useState("");
   const [image, setImage] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const { user } = useAuth();
 
   if (!fontsLoaded) return null;
+
+  // Pick image and store in proper format
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      const asset = result.assets[0];
+      setImage({
+        uri: asset.uri,
+        type: asset.mimeType || "image/jpeg",
+        name: asset.fileName || asset.uri.split("/").pop() || "photo.jpg",
+      });
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!title || !desc || !price || !image) {
+      alert("Please fill all fields and select an image");
+      return;
+    }
+    setLoading(true);
+    const formData = new FormData();
+    formData.append("name", title);
+    formData.append("price", price);
+    formData.append("description", desc);
+    formData.append("createdBy", user?.id);
+    formData.append("file", image); // image object has uri, type, name
+
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/products/upload`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+      console.log("Server response:", response.data);
+      alert("Product posted successfully!");
+    } catch (error) {
+      console.log(error);
+      alert("Upload failed!");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -74,12 +132,9 @@ export default function SellForm() {
         {/* Upload Image */}
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Upload Image</Text>
-          <TouchableOpacity
-            style={styles.uploadBox}
-            onPress={() => alert("Open image picker")}
-          >
+          <TouchableOpacity style={styles.uploadBox} onPress={pickImage}>
             {image ? (
-              <Image source={{ uri: image }} style={styles.uploadedImage} />
+              <Image source={{ uri: image.uri }} style={styles.uploadedImage} />
             ) : (
               <Ionicons
                 name="camera-outline"
@@ -91,11 +146,19 @@ export default function SellForm() {
         </View>
 
         {/* Submit Button */}
-        <TouchableOpacity
-          style={styles.submitButton}
-          onPress={() => alert("Ad Posted Successfully!")}
-        >
+        {/* <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
           <Text style={styles.submitButtonText}>Post Ad</Text>
+        </TouchableOpacity> */}
+        <TouchableOpacity
+          style={[styles.submitButton, loading && { opacity: 0.7 }]}
+          onPress={handleSubmit}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.submitButtonText}>Post Ad</Text>
+          )}
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

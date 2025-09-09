@@ -9,10 +9,11 @@ import {
   ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import axios from "axios";
 import { useFonts } from "expo-font";
 import colors from "../../assets/constants/colors";
 import { useRouter } from "expo-router";
-
+import { API_URL } from "../../config";
 const Signup = ({ navigation }) => {
   const router = useRouter();
 
@@ -22,10 +23,47 @@ const Signup = ({ navigation }) => {
     popb: require("../../assets/fonts/Poppins-Bold.ttf"),
     popsb: require("../../assets/fonts/Poppins-SemiBold.ttf"),
   });
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+
+  const [password, setPassword] = useState("");
 
   const [showPassword, setShowPassword] = useState(false);
 
   if (!fontsLoaded) return null;
+  async function handleSignup() {
+    if (!email || !password) {
+      alert("Enter email and password");
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/auth/register`,
+        {
+          name: name,
+          email: email,
+          password: password,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log("Server response:", response.data);
+      // const token = response.data.token;
+      // const userData = response.data.user;
+      // login(userData, token);
+    } catch (error) {
+      if (error.response) {
+        console.error("Error:", error.response.data);
+      } else {
+        console.error("Network error:", error.message);
+      }
+    }
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -38,6 +76,8 @@ const Signup = ({ navigation }) => {
         <TextInput
           placeholder="Full Name"
           style={styles.input}
+          value={name}
+          onChangeText={setName}
           placeholderTextColor="#999"
         />
       </View>
@@ -49,6 +89,8 @@ const Signup = ({ navigation }) => {
           placeholder="Email"
           style={styles.input}
           keyboardType="email-address"
+          value={email}
+          onChangeText={setEmail}
           placeholderTextColor="#999"
         />
       </View>
@@ -59,6 +101,8 @@ const Signup = ({ navigation }) => {
         <TextInput
           placeholder="Password"
           style={styles.input}
+          value={password}
+          onChangeText={setPassword}
           secureTextEntry={!showPassword}
           placeholderTextColor="#999"
         />
@@ -86,7 +130,7 @@ const Signup = ({ navigation }) => {
       </View>
 
       {/* Signup Button */}
-      <TouchableOpacity style={styles.button}>
+      <TouchableOpacity style={styles.button} onPress={handleSignup}>
         <Text style={styles.buttonText}>Sign Up</Text>
       </TouchableOpacity>
 

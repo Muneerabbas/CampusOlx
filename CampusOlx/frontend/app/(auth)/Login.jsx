@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ScrollView,
 } from "react-native";
+import { API_URL } from "../../config";
 import { KeyboardAvoidingView, Platform } from "react-native";
 import axios from "axios";
 import { Ionicons } from "@expo/vector-icons";
@@ -40,7 +41,7 @@ const Login = ({ navigation }) => {
 
     try {
       const response = await axios.post(
-        "https://lemon-memes-sink.loca.lt/api/auth/login",
+        `${API_URL}/api/auth/login`,
         {
           email: email,
           password: password,
@@ -56,7 +57,6 @@ const Login = ({ navigation }) => {
       const token = response.data.token;
       const userData = response.data.user;
       login(userData, token);
-      
     } catch (error) {
       if (error.response) {
         console.error("Error:", error.response.data);

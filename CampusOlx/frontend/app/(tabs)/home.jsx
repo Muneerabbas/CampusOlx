@@ -8,12 +8,18 @@ import {
   TouchableOpacity,
   FlatList,
   Dimensions,
+  RefreshControl,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
 import colors from "../../assets/constants/colors";
 import { useAuth } from "../context/AuthContext";
 import { useRouter } from "expo-router";
+import axios from "axios";
+import { API_URL } from "../../config";
+import { useState } from "react";
+import { useEffect } from "react";
 const { width } = Dimensions.get("window");
 
 const Home = () => {
@@ -29,70 +35,96 @@ const Home = () => {
   }
   const { user } = useAuth();
   const router = useRouter();
-  const products = [
-    {
-      id: "1",
-      name: "King Size Bed",
-      price: "₹14,060",
-      image:
-        "https://images.pexels.com/photos/2082087/pexels-photo-2082087.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-    },
-    {
-      id: "2",
-      name: "iPad 10th Gen",
-      price: "₹23,000",
-      image:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQdc0FVrl0qqj44bOntkQfgt_CB6xfiER6OiCATskR7CwLaicnE7fnqLz4WRA6ZBubfFkE&usqp=CAU",
-    },
-    {
-      id: "3",
-      name: "Hero Cycle",
-      price: "₹2,320",
-      image:
-        "https://content.jdmagicbox.com/v2/comp/mumbai/j1/022pxx22.xx22.210129000514.k6j1/catalogue/eddie-cycling-andheri-east-mumbai-bicycle-dealers-r2w6ibghl1.jpg",
-    },
-    {
-      id: "4",
-      name: "Sony Smart TV",
-      price: "₹11,200",
-      image:
-        "https://5.imimg.com/data5/SELLER/Default/2023/9/348611051/SA/CE/EX/66697248/used-led-tv-500x500.jpeg",
-    },
-    {
-      id: "5",
-      name: "iPhone 15",
-      price: "₹71,990",
-      image: "https://apollo.olx.in/v1/files/i7yjga7168s93-IN/image",
-    },
-    {
-      id: "6",
-      name: "LG Refrigerator",
-      price: "₹34,990",
-      image:
-        "https://i.redd.it/grateful-i-was-able-to-buy-a-second-hand-fridge-for-our-v0-zbgyk3g2uw1f1.jpg?width=1080&format=pjpg&auto=webp&s=724ee6ca222a3e6b9120b5f1bfac701abac7e19e",
-    },
-    {
-      id: "7",
-      name: "Dell Inspiron Laptop",
-      price: "₹54,500",
-      image:
-        "https://i.dell.com/is/image/DellContent/content/dam/ss2/product-images/dell-client-products/notebooks/inspiron-notebooks/15-3520/media-gallery/in3520-cnb-05000ff090-sl.psd?fmt=pjpg&pscan=auto&scl=1&wid=4330&hei=2877&qlt=100,1&resMode=sharp2&size=4330,2877&chrss=full",
-    },
-    {
-      id: "8",
-      name: "Bose Bluetooth Speaker",
-      price: "₹18,500",
-      image: "https://apollo.olx.in/v1/files/8h7ozkuonvxi-IN/image",
-    },
-    {
-      id: "9",
-      name: "Samsung Galaxy Watch",
-      price: "₹27,999",
-      image:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQBqj9QkR8RKxjrmaanFgY_AguYP7k8XFCz1g&s",
-    },
-  ];
+  const [products, setProducts] = useState([]);
+  const [isLoading, setIsloading] = useState(true);
+  // const products = [
+  //   {
+  //     id: "1",
+  //     name: "King Size Bed",
+  //     price: "₹14,060",
+  //     image:
+  //       "https://images.pexels.com/photos/2082087/pexels-photo-2082087.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+  //   },
+  //   {
+  //     id: "2",
+  //     name: "iPad 10th Gen",
+  //     price: "₹23,000",
+  //     image:
+  //       "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQdc0FVrl0qqj44bOntkQfgt_CB6xfiER6OiCATskR7CwLaicnE7fnqLz4WRA6ZBubfFkE&usqp=CAU",
+  //   },
+  //   {
+  //     id: "3",
+  //     name: "Hero Cycle",
+  //     price: "₹2,320",
+  //     image:
+  //       "https://content.jdmagicbox.com/v2/comp/mumbai/j1/022pxx22.xx22.210129000514.k6j1/catalogue/eddie-cycling-andheri-east-mumbai-bicycle-dealers-r2w6ibghl1.jpg",
+  //   },
+  //   {
+  //     id: "4",
+  //     name: "Sony Smart TV",
+  //     price: "₹11,200",
+  //     image:
+  //       "https://5.imimg.com/data5/SELLER/Default/2023/9/348611051/SA/CE/EX/66697248/used-led-tv-500x500.jpeg",
+  //   },
+  //   {
+  //     id: "5",
+  //     name: "iPhone 15",
+  //     price: "₹71,990",
+  //     image: "https://apollo.olx.in/v1/files/i7yjga7168s93-IN/image",
+  //   },
+  //   {
+  //     id: "6",
+  //     name: "LG Refrigerator",
+  //     price: "₹34,990",
+  //     image:
+  //       "https://i.redd.it/grateful-i-was-able-to-buy-a-second-hand-fridge-for-our-v0-zbgyk3g2uw1f1.jpg?width=1080&format=pjpg&auto=webp&s=724ee6ca222a3e6b9120b5f1bfac701abac7e19e",
+  //   },
+  //   {
+  //     id: "7",
+  //     name: "Dell Inspiron Laptop",
+  //     price: "₹54,500",
+  //     image:
+  //       "https://i.dell.com/is/image/DellContent/content/dam/ss2/product-images/dell-client-products/notebooks/inspiron-notebooks/15-3520/media-gallery/in3520-cnb-05000ff090-sl.psd?fmt=pjpg&pscan=auto&scl=1&wid=4330&hei=2877&qlt=100,1&resMode=sharp2&size=4330,2877&chrss=full",
+  //   },
+  //   {
+  //     id: "8",
+  //     name: "Bose Bluetooth Speaker",
+  //     price: "₹18,500",
+  //     image: "https://apollo.olx.in/v1/files/8h7ozkuonvxi-IN/image",
+  //   },
+  //   {
+  //     id: "9",
+  //     name: "Samsung Galaxy Watch",
+  //     price: "₹27,999",
+  //     image:
+  //       "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQBqj9QkR8RKxjrmaanFgY_AguYP7k8XFCz1g&s",
+  //   },
+  // ];
+  const [refreshing, setRefreshing] = useState(false);
+
+  async function fetchData() {
+    try {
+      setIsloading(true);
+      const res = await axios.get(`${API_URL}/api/products/get`);
+      setProducts(res.data);
+
+      // setIsloading(false);
+    } catch (error) {
+      alert(error);
+    } finally {
+      setIsloading(false);
+    }
+  }
+  useEffect(() => {
+    fetchData();
+  }, []);
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchData();
+    setRefreshing(false);
+  };
   const handleSell = () => {
+    fetchData();
     router.navigate("screens/SellForm");
   };
   const renderProductCard = ({ item }) => (
@@ -101,7 +133,10 @@ const Home = () => {
       activeOpacity={0.8}
       onPress={() => alert("Nothing will happen as app is under Progress!")}
     >
-      <Image source={{ uri: item.image }} style={styles.productImage} />
+      <Image
+        source={{ uri: `${API_URL}${item.images}` }}
+        style={styles.productImage}
+      />
       {/* Price Tag */}
       <View style={styles.priceContainer}>
         <Text style={styles.priceText}>{item.price}</Text>
@@ -153,15 +188,31 @@ const Home = () => {
       </View>
 
       {/* Product Grid */}
-      <FlatList
-        data={products}
-        key={"2-columns"}
-        numColumns={2}
-        columnWrapperStyle={{ justifyContent: "space-between" }}
-        keyExtractor={(item) => item.id}
-        renderItem={renderProductCard}
-        showsVerticalScrollIndicator={false}
-      />
+
+      {isLoading ? (
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      ) : (
+        <FlatList
+          data={products}
+          key={"2-columns"}
+          numColumns={2}
+          columnWrapperStyle={{ justifyContent: "space-between" }}
+          keyExtractor={(item) => item._id}
+          renderItem={renderProductCard}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#6200EE"]}
+            />
+          }
+        />
+      )}
     </SafeAreaView>
   );
 };
