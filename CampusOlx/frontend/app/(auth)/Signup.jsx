@@ -6,14 +6,17 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
 import { useFonts } from "expo-font";
 import colors from "../../assets/constants/colors";
 import { useRouter } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
+
 import { API_URL } from "../../config";
+
 const Signup = ({ navigation }) => {
   const router = useRouter();
 
@@ -23,17 +26,74 @@ const Signup = ({ navigation }) => {
     popb: require("../../assets/fonts/Poppins-Bold.ttf"),
     popsb: require("../../assets/fonts/Poppins-SemiBold.ttf"),
   });
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-
   const [password, setPassword] = useState("");
-
   const [showPassword, setShowPassword] = useState(false);
-
+  const [image, setImage] = useState(null); // ✅ added state
+  const [isIDloading, setisIDloading] = useState(false);
   if (!fontsLoaded) return null;
+
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      // aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      const asset = result.assets[0];
+      const img = {
+        uri: asset.uri,
+        type: asset.mimeType || "image/jpeg",
+        name: asset.fileName || asset.uri.split("/").pop() || "photo.jpg",
+      };
+      setImage(img);
+      return img; // ✅ return picked image
+    }
+    return null;
+  };
+
+  async function handleIDverify() {
+    const img = await pickImage();
+    if (!img) {
+      alert("No image selected!");
+      return;
+    }
+
+    try {
+      setisIDloading(true);
+      const formData = new FormData();
+      formData.append("idcard", {
+        uri: img.uri,
+        type: img.type,
+        name: img.name,
+      });
+
+      const response = await axios.post(
+        `${API_URL}/api/idcard/verify-id`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+
+      console.log("Server response:", response.data);
+      alert(response.data.message);
+      setisIDloading(false);
+
+      setName(response.data.name);
+    } catch (error) {
+      console.error("Upload failed:", error.response?.data || error.message);
+      alert("Upload failed!");
+    }
+  }
+
   async function handleSignup() {
-    if (!email || !password) {
-      alert("Enter email and password");
+    if (!email || !password || !name) {
+      alert("Enter all fields");
       return;
     }
 
@@ -46,16 +106,12 @@ const Signup = ({ navigation }) => {
           password: password,
         },
         {
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
         }
       );
 
       console.log("Server response:", response.data);
-      // const token = response.data.token;
-      // const userData = response.data.user;
-      // login(userData, token);
+      alert("Signup successful!");
     } catch (error) {
       if (error.response) {
         console.error("Error:", error.response.data);
@@ -78,8 +134,16 @@ const Signup = ({ navigation }) => {
           style={styles.input}
           value={name}
           onChangeText={setName}
+          editable={false}
           placeholderTextColor="#999"
         />
+        {isIDloading ? (
+          <ActivityIndicator size="small" color={colors.primary} />
+        ) : (
+          <TouchableOpacity onPress={handleIDverify}>
+            <Ionicons name="id-card-outline" size={20} color={colors.primary} />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Email */}

@@ -21,7 +21,7 @@ const Profile = () => {
   });
 
   if (!fontsLoaded) return null;
-
+  const { user } = useAuth();
   const profileOptions = [
     {
       id: "1",
@@ -60,8 +60,8 @@ const Profile = () => {
           style={styles.profileImage}
         />
         <View style={styles.profileInfo}>
-          <Text style={styles.name}>Nishant Kumar</Text>
-          <Text style={styles.email}>nishant@email.com</Text>
+          <Text style={styles.name}>{user?.name.split(" ")[1]}</Text>
+          <Text style={styles.email}>{user?.email}</Text>
         </View>
       </View>
 

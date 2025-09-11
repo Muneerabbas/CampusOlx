@@ -2,6 +2,7 @@ const express = require("express");
 require("dotenv").config();
 const UserRouter = require("./routes/auth");
 const ProductRouter = require("./routes/products");
+const OCRouter = require("./routes/ocr");
 const connectDB = require("./config/connection");
 const path = require("path");
 const app = express();
@@ -15,6 +16,8 @@ app.get("/", (req, res) => {
 });
 app.use("/api/auth", UserRouter);
 app.use("/api/products", ProductRouter);
-app.listen(3000, "0.0.0.0", () => {
-  console.log("Server running on port 3000");
+app.use("/api/idcard", OCRouter);
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log("Server running on port " + PORT);
 });

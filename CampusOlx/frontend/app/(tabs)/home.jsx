@@ -161,7 +161,7 @@ const Home = () => {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.greetingText}>
-          Hi {user?.name} <Text style={styles.handEmoji}>👋</Text>
+          Hi {user?.name.split(" ")[1]} <Text style={styles.handEmoji}>👋</Text>
         </Text>
         <TouchableOpacity>
           <Ionicons name="search-outline" size={28} color="#000" />
