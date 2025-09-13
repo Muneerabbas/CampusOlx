@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
 import {
   StyleSheet,
   SafeAreaView,
@@ -9,30 +10,50 @@ import {
   FlatList,
   Dimensions,
   Alert,
+  ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
 import colors from "../../assets/constants/colors";
+import axios from "axios";
+import { useRouter } from "expo-router";
+
+import { API_URL } from "../../config";
 
 const { width } = Dimensions.get("window");
 
 const MyAds = () => {
-  const [ads, setAds] = useState([
-    {
-      id: "1",
-      name: "King Size Bed",
-      price: "₹14,060",
-      image:
-        "https://images.pexels.com/photos/2082087/pexels-photo-2082087.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-    },
-    {
-      id: "2",
-      name: "iPad 10th Gen",
-      price: "₹23,000",
-      image:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQdc0FVrl0qqj44bOntkQfgt_CB6xfiER6OiCATskR7CwLaicnE7fnqLz4WRA6ZBubfFkE&usqp=CAU",
-    },
-  ]);
+  const [ads, setAds] = useState([]);
+  const { user } = useAuth();
+  const [isLoading, setIsloading] = useState(true);
+
+  async function fetchData() {
+    const id = user.id;
+    try {
+      setIsloading(true);
+      const res = await axios.get(
+        `${API_URL}/api/products/getUserproducts/${id}`
+      );
+      setAds(res.data);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsloading(false);
+    }
+  }
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const [refreshing, setRefreshing] = useState(false);
+  const router = useRouter();
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchData();
+    setRefreshing(false);
+  };
 
   const [fontsLoaded] = useFonts({
     pop: require("../../assets/fonts/Poppins-Regular.ttf"),
@@ -43,19 +64,21 @@ const MyAds = () => {
 
   if (!fontsLoaded) return null;
 
-  // Add new ad (dummy)
   const handleAddAd = () => {
-    alert("New Ad added!");
+    router.navigate("screens/SellForm");
   };
 
-  // Edit ad (dummy)
   const handleEditAd = (id) => {
-    alert("Edit Ad ID: " + id);
+    router.navigate("screens/SellForm");
   };
 
   const renderAdCard = ({ item }) => (
     <TouchableOpacity style={styles.card} activeOpacity={0.8}>
-      <Image source={{ uri: item.image }} style={styles.image} />
+      <Image
+        source={{ uri: `${API_URL}${item.images}` }}
+        style={styles.image}
+      />
+
       {/* Edit button */}
       <TouchableOpacity
         style={styles.editButton}
@@ -86,16 +109,38 @@ const MyAds = () => {
     <SafeAreaView style={styles.container}>
       <Text style={styles.heading}>My Ads</Text>
 
-      <FlatList
-        data={ads}
-        key={"2-columns"}
-        numColumns={2}
-        columnWrapperStyle={{ justifyContent: "space-between" }}
-        keyExtractor={(item) => item.id}
-        renderItem={renderAdCard}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }}
-      />
+      <View style={{ flex: 1, justifyContent: "center" }}>
+        {isLoading ? (
+          <ActivityIndicator size="large" color={colors.primary} />
+        ) : ads.length === 0 ? (
+          <Text
+            style={[
+              styles.heading,
+              { textAlign: "center", color: colors.primary },
+            ]}
+          >
+            No Ads found
+          </Text>
+        ) : (
+          <FlatList
+            data={ads}
+            key={"2-columns"}
+            numColumns={2}
+            columnWrapperStyle={{ justifyContent: "space-between" }}
+            keyExtractor={(item) => item._id} // use Mongo _id
+            renderItem={renderAdCard}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 100 }}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={["#6200EE"]}
+              />
+            }
+          />
+        )}
+      </View>
 
       {/* Floating Add Button */}
       <TouchableOpacity style={styles.fab} onPress={handleAddAd}>

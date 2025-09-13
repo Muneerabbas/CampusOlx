@@ -49,4 +49,36 @@ router.get("/get", async (req, res) => {
   }
 });
 
+router.get("/get/:id", async (req, res) => {
+  const id = req.params.id;
+  try {
+    const product = await Product.findById({ _id: id }).populate(
+      "createdBy",
+      "name email"
+    );
+
+    res.status(201).json(product);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ msg: "Server error" });
+  }
+});
+
+router.get("/getUserproducts/:id", async (req, res) => {
+  const userId = req.params.id;
+
+  try {
+    const products = await Product.find({ createdBy: userId });
+
+    if (!products || products.length === 0) {
+      return res.status(404).json({ message: "No Ads found" });
+    }
+
+    res.status(201).json(products);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ msg: "Server error" });
+  }
+});
+
 module.exports = router;
